@@ -1,5 +1,4 @@
 <template>
-  <!-- <div ref="promap" style="width: 42.2vw;height:67.5vh;"></div> -->
   <div style="position:relative">
     <div ref="mapChart" style="width: 42.2vw; height: 67.5vh;"></div>
     <div class="goback" @click="goBack" v-show="mapLevel==='city'">
