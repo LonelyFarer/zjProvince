@@ -1,41 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>临安</title>
-    <script type="text/javascript">
-      window.onload = function() {
-        setRem()
-      }
-      window.onresize = function() {
-        setRem()
-      }
-      /*设置字体rem*/
-      function setRem() {
-        var wH = window.innerHeight // 当前窗口的高度
-        var wW = window.innerWidth // 当前窗口的宽度
-        var whdef = 100 / 1920 // 表示1920的设计图,使用100PX的默认值
-        var html = document.documentElement
-        if (wW > 1560) {
-          var rem = wW * whdef // 以默认比例值乘以当前窗口宽度,得到该宽度下的相应FONT-SIZE值
-          html.style.fontSize = rem + 'px' //适用于PC网站
-        } else {
-          var rem = 1560 * whdef
-          html.style.fontSize = rem + 'px'
-        }
-      }
-    </script>
-  </head>
-  <body>
-    <noscript> </noscript>
-  
-    <!-- <script src="https://webapi.amap.com/maps?v=1.4.15&key=0a05c93e6e640cc48dc94b915047f067&plugin=AMap.DistrictSearch"></script>
-    <script src="https://webapi.amap.com/ui/1.0/main.js?v=1.0.11"></script> -->
-    <div id="app"></div>
 
-    <!-- built files will be auto injected -->
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>临安</title>
+  <script type="text/javascript">
+    window.onload = function () {
+      setRem()
+    }
+    window.onresize = function () {
+      setRem()
+    }
+    /*设置字体rem*/
+    function setRem() {
+      var wH = window.innerHeight // 当前窗口的高度
+      var wW = window.innerWidth // 当前窗口的宽度
+      var whdef = 100 / 1920 // 表示1920的设计图,使用100PX的默认值
+      var html = document.documentElement
+      if (wW > 1560) {
+        var rem = wW * whdef // 以默认比例值乘以当前窗口宽度,得到该宽度下的相应FONT-SIZE值
+        html.style.fontSize = rem + 'px' //适用于PC网站
+      } else {
+        var rem = 1560 * whdef
+        html.style.fontSize = rem + 'px'
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <noscript> </noscript>
+
+  <script
+          src="https://webapi.amap.com/maps?v=1.4.15&key=0a05c93e6e640cc48dc94b915047f067&plugin=AMap.DistrictSearch"></script>
+  <script src="https://webapi.amap.com/ui/1.0/main.js"></script>
+  <div id="app"></div>
+
+  <!-- built files will be auto injected -->
+</body>
+
 </html>

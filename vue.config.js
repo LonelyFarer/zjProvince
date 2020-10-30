@@ -26,12 +26,12 @@ module.exports = {
       .set('@', resolve('src')) // key,value自行定义，比如.set('@@', resolve('src/components'))
       .set('@components', resolve('src/components'))
   },
-  // configureWebpack(config) {
-  //       config.externals = {
-  //           'AMap': 'AMap' // 高德地图配置
-  //       }
-  //  },
-  // 设为false打包时不生成.map文件
+  configureWebpack (config) {
+    config.externals = {
+      'AMap': 'AMap' // 高德地图配置
+    }
+  },
+  //设为false打包时不生成.map文件
   productionSourceMap: false,
   devServer: {
     open: true,

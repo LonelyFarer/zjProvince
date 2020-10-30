@@ -1,178 +1,220 @@
 <template>
   <div>
-    <div ref="myEchart" style="width: 42.2vw;height:67.5vh;"></div>
+    <div id="pro-map" style="width: 42.2vw; height: 67.5vh;"></div>
   </div>
 </template>
 
 <script>
-import echarts from "echarts"
-import "echarts/map/js/province/zhejiang.js"
-import "echarts-gl"
-
-import hangzhou from "../../public/data/json/zhejiang/hangzhou.json"
-import jiaxing from "../../public/data/json/zhejiang/jiaxing.json"
-import jinhua from "../../public/data/json/zhejiang/jinhua.json"
-import lishui from "../../public/data/json/zhejiang/lishui.json"
-import ningbo from "../../public/data/json/zhejiang/ningbo.json"
-import quzhou from "../../public/data/json/zhejiang/quzhou.json"
-import shaoxing from "../../public/data/json/zhejiang/shaoxing.json"
-import taizhou from "../../public/data/json/zhejiang/taizhou.json"
-import wenzhou from "../../public/data/json/zhejiang/wenzhou.json"
-import zhoushan from "../../public/data/json/zhejiang/zhoushan.json"
-import huzhou from "../../public/data/json/zhejiang/huzhou.json"
-
+import AMap from "AMap"
 export default {
   data () {
     return {
-      myChart: null,
-      mapName: '浙江'
+      map: null,
+      districtExplorer: null,
+      adcode: '330000',
+      currentlevel: 'province',
+      currentAreaNode: null,
+      zoom: 7
     }
   },
+
+
+  watch: {},
+
+  created () { },
+
   mounted () {
-    this.myChart = this.$echarts.init(this.$refs.myEchart)
-    this.initChart()
-    //echarts自适应
-    window.onresize = this.myChart.resize
+    this.initDistrictExplorer()
+
   },
+
   methods: {
-    initChart () {
-      var cityMap = {
-        杭州市: hangzhou,
-        丽水市: lishui,
-        台州市: taizhou,
-        嘉兴市: jiaxing,
-        宁波市: ningbo,
-        温州市: wenzhou,
-        湖州市: huzhou,
-        绍兴市: shaoxing,
-        舟山市: zhoushan,
-        衢州市: quzhou,
-        金华市: jinhua,
-      }
-      var options = {
-        series: [
-          {
-            type: 'map3D',
-            name: '浙江',
-            selectedMode: "single",//地图高亮单选
-            boxDepth: 90,//地图倾斜度
-            regionHeight: 5,//地图高度
-            map: '浙江',
-            viewControl: {
-              //distance:150,//地图视角 控制初始大小
-              rotateSensitivity: 0,//禁止旋转
-              zoomSensitivity: 0,//禁止缩放
-            },
-            label: {
-              show: true,//是否显示市
-              textStyle: {
-                color: "#0a1640",//文字颜色
-                fontSize: 12,//文字大小
-                backgroundColor: "rgba(0,0,0,0)",//透明度0清空文字背景 
-                align: 'center'
-              }
-            },
-            itemStyle: {
-              color: "#81d0f1",//地图颜色
-              borderWidth: 0.5,//分界线wdith    
-              borderColor: "#459bca",//分界线颜色  
-            },
-            emphasis: {
-              label: {
-                show: true,//是否显示高亮
-                textStyle: {
-                  color: '#fff',//高亮文字颜色
-                }
-              },
-              itemStyle: {
-                color: '#0489d6',//地图高亮颜色
-              }
-            },
-            //高亮市区  echarts  bug 不生效
-            regions: [
-              {
-                name: "杭州市",
-                itemStyle: {
-                  areaColor: "#f00",
-                }
-              }
-            ]
-          }]
-      }
-      this.myChart.setOption(options)
-      this.myChart.on("click", (params) => {
-        //地图下钻
-        console.log(params, 'ppp')
-        if (cityMap[params.name]) {
-          this.cityName = params.name
-          var url = cityMap[params.name]
-          this.$echarts.registerMap(params.name, url)
-          this.changeView(params.data.code, "city")
-          this.mapName = params.names
-          // this.mapCharts_option.geo.map = params.name
-          this.myCharts.setOption(this.myCharts_option, true)
-        }
+    initDistrictExplorer () {
+      let _this = this
+      // 加载行政区划组件
+      AMapUI.loadUI(['geo/DistrictExplorer'], function (DistrictExplorer) {
+        //启动页面
+        _this.init(DistrictExplorer)
       })
     },
-    // 注册地图 name: 省市名称； level：区分省市
-    changeView (code, level) {
-      if (level === "city") {
-        // 记录当前选中的市信息
-        this.currentCity = {
-          code: code,
+
+    init (DistrictExplorer) {
+      let _this = this
+      this.map = new AMap.Map('pro-map', {
+        pitch: 30, // 地图俯仰角度，有效范围 0 度- 83 度
+        viewMode: '3D', // 地图模式
+        pitch: 45, // 俯视角度
+        mapStyle: 'amap://styles/ffcbb809ccbef341a4b581074ee94be4', // 设置地图的显示样式
+        zoom: this.zoom, //设置地图的缩放级别
+        zooms: [this.zoom, 20], // 缩放级别限制
+        center: [119.758303, 29.327422],
+      })
+
+      this.map.on('click', e => {
+        if (this.currentlevel !== 'district') {
+          this.districtExplorer.locatePosition(e.lnglat, (error, features) => {
+            if (
+              features.length > 2 &&
+              features[1].properties.adcode === 330000
+            ) {
+              if (this.currentlevel === 'province') {
+                // 省级 切换至 市级
+                this.featureClick(features[2])
+              } else if (this.currentlevel === 'city') {
+                // 市级 切换至 区级
+                console.log(this.currentAreaNode.getAdcode(), features[2].properties.adcode, features[3], 'ii')
+                if (
+                  features[2].properties.adcode ===
+                  this.currentAreaNode.getAdcode()
+                ) {
+                  this.featureClick(features[3])
+                }
+              } else {
+                // district级别 暂不做处理
+              }
+            }
+          })
         }
-      }
-      this.mapLevel = level
-      let mapJson = this.initCity(code)
-      console.log(level, this.mapName, mapJson, "mapJson")
-      this.$echarts.registerMap(this.mapName, mapJson)
+      })
+
+      _this.districtExplorer = new DistrictExplorer({
+        eventSupport: true, // 打开事件支持
+        map: this.map //关联的地图实例
+      })
+      // AMap.plugin('AMap.DistrictSearch', function () {
+      //   var opts = {
+      //     subdistrict: 1, // 获取边界不需要返回下级行政区
+      //     extensions: "all", // 返回行政区边界坐标组等具体信息
+      //     level: "province" // 查询行政级别为 市
+      //   }
+      //   var district = new AMap.DistrictSearch(opts)
+
+      //   district.search('浙江省', function (status, result) {
+      // 查询成功时，result即为对应的行政区信息
+
+      //var bounds = result.districtList[0].boundaries
+      //var bounds = result.districtList[0].districtList
+
+      //for (var i = 0, l = bounds.length; i < l; i++) {
+
+      this.switch2AreaNode(this.adcode)
+      //   var polygonbox = new AMap.Polygon({
+      //     strokeWeight: 1,
+      //     path: bounds[i],
+      //     fillOpacity: 0.9,
+      //     fillColor: "blue",
+      //     strokeColor: "#fff",
+      //     // extData: {
+      //     //   IDname: bounds[i].name,
+      //     // }
+      //   })
+      //   map.add(polygonbox)
+      //}
+
+      //   })
+      // })
     },
-    initCity (code) {
-      // 选择加载市json
-      let mapJson
-      switch (code) {
-        case "330000":
-          mapJson = zhejiang
-          break
-        case "330100":
-          mapJson = hangzhou
-          break
-        case "330200":
-          mapJson = ningbo
-          break
-        case "330300":
-          mapJson = wenzhou
-          break
-        case "330400":
-          mapJson = jiaxing
-          break
-        case "330500":
-          mapJson = huzhou
-          break
-        case "330600":
-          mapJson = shaoxing
-          break
-        case "330700":
-          mapJson = jinhua
-          break
-        case "330800":
-          mapJson = quzhou
-          break
-        case "330900":
-          mapJson = zhoushan
-          break
-        case "331000":
-          mapJson = taizhou
-          break
-        case "331100":
-          mapJson = lishui
-          break
+    switch2AreaNode (adcode, callback) {
+      let _this = this
+      this.districtExplorer.loadAreaNode(adcode, function (error, areaNode) {
+        if (error) {
+          if (callback) {
+            callback(error)
+          }
+          return
+        }
+        // 记录当前选择节点
+        _this.currentAreaNode = areaNode
+        // 待绘制marker次数
+        //this.refreshCount += 1
+
+        // 设置当前使用的定位用节点
+        _this.districtExplorer.setAreaNodesForLocating([areaNode])
+
+        // 刷新内容
+        _this.refreshAreaNode(areaNode)
+
+
+      })
+    },
+    // 切换区域后刷新显示内容
+    refreshAreaNode (areaNode) {
+      // 清空Hover状态
+      this.districtExplorer.setHoverFeature(null)
+      // 绘制区域
+      this.renderAreaPolygons(areaNode)
+    },
+    // 绘制区域的边界
+    renderAreaPolygons (areaNode) {
+      // 清除已有的绘制内容
+      this.districtExplorer.clearFeaturePolygons()
+      // 清空marker标记
+      //this.map.remove(this.markers)
+
+      // 边界颜色
+      let strokeColor = '#ffffff'
+
+      // 绘制子区域
+      this.districtExplorer.renderSubFeatures(areaNode, function (feature, i) {
+        return {
+          cursor: 'default',
+          bubble: true,
+          strokeColor: strokeColor, // 线颜色
+          strokeOpacity: 1, // 线透明度
+          strokeWeight: 0.5, // 线宽
+          fillColor: '#1CF9F7', // 填充色
+          fillOpacity: 0.6 // 填充透明度
+        }
+      })
+
+      // 绘制父级区划, 仅绘制描边 区县权限需要填充颜色
+      this.districtExplorer.renderParentFeature(areaNode, {
+        cursor: 'default',
+        bubble: true,
+        strokeColor: strokeColor, // 线颜色
+        strokeOpacity: 1, // 线透明度
+        strokeWeight: 0.5, // 线宽
+        fillColor: this.authority === 'district' ? '#1CF9F7' : null,
+        fillOpacity: this.authority === 'district' ? 0.6 : null // 填充透明度
+      })
+
+      // 更新地图视野
+      if (areaNode.getAdcode() === 330000) {
+        this.map.setZoomAndCenter(this.zoom, this.mapCenter)
+      } else {
+        this.map.setBounds(areaNode.getBounds(), null, null, true)
       }
-      return mapJson
+    },
+    featureClick (feature) {
+      let props = feature.properties
+      // 如果存在子节点
+      if (props.childrenNum > 0) {
+        // 切换到子区域
+        this.$emit('searchData', [props.adcode, props.level, props.name])
+        this.switch2AreaNode(props.adcode)
+      } else {
+        this.districtExplorer.clearFeaturePolygons()
+        // 清空marker
+        //this.map.remove(this.markers)
+        // 设置地图中心、缩放级别
+        this.map.setZoomAndCenter(15, props.center)
+        // 显示全部地图元素
+        this.map.setFeatures(['bg', 'point', 'road', 'building'])
+        // 监听地图缩放
+        this.map.on('zoomchange', this.zoomChange)
+        // 地图移动后触发
+        this.map.on('moveend', this.logMapBounds)
+      }
+      // 切换省/市/区等级
+      if (this.currentlevel === 'province') {
+        this.currentlevel = 'city'
+      } else if (this.currentlevel === 'city') {
+        this.currentlevel = 'district'
+      }
     },
   }
-}
+};
 </script>
 
-<style lang="less" scoped>
+<style scoped>
 </style>

@@ -119,7 +119,8 @@
           </ul>
         </div>
         <div class="promap">
-          <promap :mapData="mapData" @linkage="linkage"></promap>
+          <!-- <promap :mapData="mapData" @linkage="linkage"></promap> -->
+          <promap3D :mapData="mapData" @linkage="linkage"></promap3D>
           <!-- <analysis-map ref="map" :mapData="mapData" @linkage="linkage" :color="mapcolor"></analysis-map> -->
         </div>
         <div class="btngroup">
@@ -238,7 +239,7 @@
 import promap from '@/components/promap'
 import promap3D from '@/components/promap3D'
 import waterProgress from '@/components/waterProgress'
-import analysisMap from '@/components/analysisMap'
+//import analysisMap from '@/components/analysisMap'
 import { on, off } from '@/libs/utils'
 import {
   getDtXzCount,
@@ -259,7 +260,8 @@ import "echarts-gl"
 // require('echarts/lib/component/legend')
 // require('echarts/lib/component/tooltip')
 export default {
-  components: { promap, promap3D, analysisMap, waterProgress },
+  components: { promap, promap3D, waterProgress },
+
   data () {
     return {
       cumulative: 722,
@@ -1611,7 +1613,7 @@ export default {
         .hCalc(730);
         .wCalc(810);
         margin: auto;
-        //background:url('../assets/img/promap.png') no-repeat;
+        //background: url('../assets/img/promap.png') no-repeat;
         background-size: 100% 100%;
       }
       .btngroup {

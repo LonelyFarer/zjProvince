@@ -30,21 +30,21 @@
 @h: 1080;
 
 .wCalc(@width) {
-    width: calc(@width / @w * 100vw);
+  width: calc(@width / @w * 100vw);
 }
 .hCalc(@height) {
-    height: calc(@height / @h * 100vh);
+  height: calc(@height / @h * 100vh);
 }
 .lhCalc(@height) {
-    line-height: calc(@height / @h * 100vh);
+  line-height: calc(@height / @h * 100vh);
 }
 .pCalc(@t, @r, @b, @l) {
-    box-sizing: border-box;
-    padding: calc(@t / @h * 100vh) calc(@r / @w * 100vw) calc(@b / @h * 100vh)
+  box-sizing: border-box;
+  padding: calc(@t / @h * 100vh) calc(@r / @w * 100vw) calc(@b / @h * 100vh)
     calc(@l / @w * 100vw);
 }
 .mCalc(@t, @r, @b, @l) {
-    margin: calc(@t / @h * 100vh) calc(@r / @w * 100vw) calc(@b / @h * 100vh)
+  margin: calc(@t / @h * 100vh) calc(@r / @w * 100vw) calc(@b / @h * 100vh)
     calc(@l / @w * 100vw);
 }
 // .fCalc(@s) {
@@ -72,9 +72,9 @@
     }
   }
 }
-body{
-  height:100%;
-  width:100%;
+body {
+  height: 100%;
+  width: 100%;
 }
 ul {
   list-style: none;
@@ -130,5 +130,8 @@ ul {
   align-items: center;
   -webkit-align-items: center;
   justify-content: center;
+}
+.amap-logo {
+  display: none !important;
 }
 </style>
