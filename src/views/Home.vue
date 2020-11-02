@@ -119,8 +119,8 @@
           </ul>
         </div>
         <div class="promap">
-          <!-- <promap :mapData="mapData" @linkage="linkage"></promap> -->
-          <promap3D :mapData="mapData" @linkage="linkage"></promap3D>
+          <promap :mapData="mapData" @linkage="linkage"></promap>
+          <!-- <promap3D :mapData="mapData" @linkage="linkage"></promap3D> -->
           <!-- <analysis-map ref="map" :mapData="mapData" @linkage="linkage" :color="mapcolor"></analysis-map> -->
         </div>
         <div class="btngroup">
@@ -223,7 +223,8 @@
             </el-tab-pane>
             <el-tab-pane label="检验检测" name="tsecond" class="analycss">
               <div class="fixedRate">
-                <water-progress :rate="rate"></water-progress>
+                <div ref="waterprogress" style="width:6.25vw;height:11.11vh"></div>
+                <!-- <water-progress :rate="rate"></water-progress> -->
               </div>
               <div ref="testDefect" style="margin-top: 2.7vh; width: 17.7vw; height: 20vh"></div>
             </el-tab-pane>
@@ -252,6 +253,7 @@ import {
   getDtZdTop5Num
 } from '@/api/analysis.js'
 import echarts from "echarts"
+import 'echarts-liquidfill/src/liquidFill.js' //在这里引入
 import "echarts-gl"
 // require('echarts/lib/chart/pie')
 // require('echarts/lib/chart/bar')
@@ -288,7 +290,7 @@ export default {
       monthyAdd: 322722,
       deviceNum: 322722,
       dmonthyAdd: 322722,
-
+      echartWater: null,
       echartHighrisk: null,
       echartRandom: null,
       echartUnit: null,
@@ -316,7 +318,8 @@ export default {
         min: ['rgba(28, 196, 255, 0.2)', 'rgba(124, 28, 255, 0.2)']
       }, // 高中低
       curarea: '330000',
-      rate: 50
+      rate: [0.5],
+      clientWidth: document.body.clientWidth
     }
   },
   watch: {
@@ -325,7 +328,8 @@ export default {
       console.log(this.curarea, 'valval')
       console.log(this.mapData, 'mapdata')
       this.getMapdata()
-    }
+    },
+
   },
   created () {
     this.getMapdata()
@@ -333,6 +337,7 @@ export default {
   mounted () {
 
     let _this = this
+    this.echartWater = this.$echarts.init(this.$refs.waterprogress)
     this.echartHighrisk = this.$echarts.init(this.$refs.highrisk)
     this.echartRandom = this.$echarts.init(this.$refs.random)
     this.echartUnit = this.$echarts.init(this.$refs.unit)
@@ -345,6 +350,9 @@ export default {
     this.echartTestDefect = this.$echarts.init(this.$refs.testDefect)
 
     window.addEventListener("resize", function () {
+      _this.clientWidth = document.body.clientWidth
+
+      _this.echartWater.resize()
       _this.echartHighrisk.resize()
       _this.echartPerson.resize()
       _this.echartUnit.resize()
@@ -355,19 +363,12 @@ export default {
       _this.echartAlarm.resize()
       _this.echartDisposaltime.resize()
       _this.echartTestDefect.resize()
+      _this.initChart()
     })
-    this.initChartHighrisk()
-    this.initChartRandom()
-    this.initChartUnit()
-    this.initChartPerson()
-    this.initChartDevicetype()
-    this.initChartDevicetrend()
-    this.initChartSafeEdu()
-    this.initChartAlarm()
-    this.initChartDisposaltime()
-    this.initChartTestDefect()
+    _this.initChart()
   },
   beforeDestroy () {
+    this.echartWater.clear()
     this.echartHighrisk.clear()
     this.echartRandom.clear()
     this.echartUnit.clear()
@@ -377,10 +378,32 @@ export default {
     this.echartSafeEdu.clear()
     this.echartAlarm.clear()
     this.echartDisposaltime.clear()
-    off(window, 'resize', this.resize)
 
   },
   methods: {
+    fontSize (res) { //字体自适应
+      let _this = this
+      // let docEl = document.documentElement,
+      //   clientWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
+      if (!_this.clientWidth) return
+      let fontSize = _this.clientWidth / 1920
+
+      return res * fontSize
+    },
+    initChart () {
+      let _this = this
+      _this.initChartWater()
+      _this.initChartHighrisk()
+      _this.initChartRandom()
+      _this.initChartUnit()
+      _this.initChartPerson()
+      _this.initChartDevicetype()
+      _this.initChartDevicetrend()
+      _this.initChartSafeEdu()
+      _this.initChartAlarm()
+      _this.initChartDisposaltime()
+      _this.initChartTestDefect()
+    },
     getMapdata () {
       let _this = this
       if (this.curarea == "330000") {
@@ -537,6 +560,58 @@ export default {
       //   console.log(this.mapData, 'mmmmmmmmmmmmm')
       // })
     },
+    initChartWater () {
+      let _this = this
+      let waterOption = {
+        //backgroundColor: 'red',
+        series: [{
+          type: 'liquidFill',
+          name: '定检率',
+          radius: '95%',
+          color: ['#1b6795'],
+          center: ['50%', '50%'],
+          data: this.rate,
+          backgroundStyle: {
+            borderWidth: 2,
+            borderColor: '#59F7FE',
+            color: 'transparent',
+          },
+          outline: {
+            itemStyle: {
+              borderWidth: 2,
+              borderColor: '#59F7FE',
+              borderType: 'dashed',
+            }
+          },
+          label: {
+            normal: { //此处没有生效，本地生效
+              textStyle: {
+                fontSize: this.fontSize(24),
+                color: '#e6e6e6',
+              },
+              formatter: function (param) {
+                return '{a|' + param.seriesName + '}' + '\n' + '{c|' + (param.value * 100).toFixed(0) + '%}'
+              },
+              rich: {
+                //富文本 对字体进一步设置样式。a对应的value,b对应的healthyName
+                a: {
+                  fontSize: this.fontSize(14),
+                  lineHeight: 10,
+                  padding: [20, 0, 0, 0]
+                },
+                c: {
+                  fontSize: this.fontSize(24),
+                  padding: [-15, 0, 0, 0]
+                }
+              }
+            },
+
+          },
+        },
+        ]
+      }
+      this.echartWater.setOption(waterOption, true)
+    },
     initChartHighrisk () {
       let _this = this
       let highriskOption = {
@@ -544,7 +619,7 @@ export default {
           text: '高风险指标分析',
           textStyle: {
             color: '#fff',
-            fontSize: 14
+            fontSize: this.fontSize(14)
           }
         },
         tooltip: {
@@ -599,7 +674,7 @@ export default {
               show: true, // 开启显示
               position: 'right',
               textStyle: {
-                fontSize: 14,
+                fontSize: this.fontSize(14),
                 color: '#fff'
               }
             },
@@ -634,7 +709,7 @@ export default {
           text: '检验缺陷Top5',
           textStyle: {
             color: '#fff',
-            fontSize: 16
+            fontSize: this.fontSize(16)
           }
         },
         tooltip: {
@@ -688,7 +763,7 @@ export default {
               show: true, // 开启显示
               position: 'right', // 在上方显示
               textStyle: {
-                fontSize: 14,
+                fontSize: this.fontSize(14),
                 color: '#fff'
               }
             },
@@ -723,7 +798,7 @@ export default {
           text: '各市协同处置情况',
           textStyle: {
             color: '#fff',
-            fontSize: 14
+            fontSize: this.fontSize(14)
           }
         },
         tooltip: {
@@ -824,7 +899,7 @@ export default {
           text: '各类型单位组成',
           textStyle: {
             color: '#fff',
-            fontSize: 14
+            fontSize: this.fontSize(14)
           }
         },
         tooltip: {
@@ -894,7 +969,7 @@ export default {
             emphasis: {
               label: {
                 show: true,
-                fontSize: '14',
+                fontSize: this.fontSize(14),
                 fontWeight: 'bold'
               }
             },
@@ -921,7 +996,7 @@ export default {
           text: '全省各类型作业人员',
           textStyle: {
             color: '#fff',
-            fontSize: 14
+            fontSize: this.fontSize(14)
           }
         },
         tooltip: {
@@ -987,7 +1062,7 @@ export default {
             emphasis: {
               label: {
                 show: true,
-                fontSize: '14',
+                fontSize: this.fontSize(14),
                 fontWeight: 'bold'
               }
             },
@@ -1014,7 +1089,7 @@ export default {
           text: '设备类型分析',
           textStyle: {
             color: '#fff',
-            fontSize: 14
+            fontSize: this.fontSize(14)
           }
         },
         tooltip: {
@@ -1046,7 +1121,7 @@ export default {
             axisLabel: {
               interval: 0,
               color: '#fff',
-              fontSize: 10,
+              fontSize: this.fontSize(10),
               formatter: function (params) {
                 var newParamsName = "" // 最终拼接成的字符串
                 var paramsNameNumber = params.length // 实际标签的个数
@@ -1118,7 +1193,7 @@ export default {
           text: '近五年设备新增趋势',
           textStyle: {
             color: '#fff',
-            fontSize: 14
+            fontSize: this.fontSize(14)
           }
         },
         tooltip: {
@@ -1185,7 +1260,7 @@ export default {
           text: '近五年特种设备事故期数走势(起)',
           textStyle: {
             color: '#fff',
-            fontSize: 14
+            fontSize: this.fontSize(14)
           }
         },
         tooltip: {
@@ -1210,7 +1285,7 @@ export default {
             axisLabel: {
               interval: 0,
               color: '#fff',
-              fontSize: 10,
+              fontSize: this.fontSize(10),
             },
             axisLine: {
               lineStyle: {
@@ -1264,7 +1339,7 @@ export default {
           text: '各市电梯故障报警数',
           textStyle: {
             color: '#fff',
-            fontSize: 14
+            fontSize: this.fontSize(14)
           }
         },
         tooltip: {
@@ -1289,7 +1364,7 @@ export default {
             axisLabel: {
               interval: 0,
               color: '#fff',
-              fontSize: 10,
+              fontSize: this.fontSize(10),
             },
             axisLine: {
               lineStyle: {
@@ -1342,7 +1417,7 @@ export default {
           text: '地市平均处置市场(分钟)',
           textStyle: {
             color: '#fff',
-            fontSize: 14
+            fontSize: this.fontSize(14)
           }
         },
         tooltip: {
@@ -1367,7 +1442,7 @@ export default {
             axisLabel: {
               interval: 0,
               color: '#fff',
-              fontSize: 10,
+              fontSize: this.fontSize(10),
             },
             axisLine: {
               lineStyle: {

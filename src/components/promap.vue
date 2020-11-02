@@ -329,12 +329,12 @@ export default {
 
   },
   mounted () {
-
+    let _this = this
     this.initMap()
     this.selectCode = amapcode
     //this.$echarts.registerMap("浙江", zhejiang)
     window.addEventListener("resize", function () {
-      this.mapCharts.resize()
+      _this.mapCharts.resize()
     })
   },
 
